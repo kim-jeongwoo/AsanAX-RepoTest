@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚾ MLB 순위표 2025</title>
+  <style>
+    :root {
+      --bg: #080d1a;
+      --card: #0f1829;
+      --card2: #131e32;
+      --border: #1c2d4a;
+      --accent: #1d6fe5;
+      --gold: #f5a623;
+      --green: #22c55e;
+      --red: #ef4444;
+      --text: #e2e8f0;
+      --muted: #5a7090;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(160deg, #04091a 0%, #0d2250 60%, #081530 100%);
+      padding: 2.5rem 1rem 2rem;
+      text-align: center;
+      border-bottom: 2px solid var(--accent);
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '⚾';
+      position: absolute;
+      font-size: 14rem;
+      opacity: 0.04;
+      top: -3rem;
+      left: -2rem;
+      pointer-events: none;
+    }
+    header::after {
+      content: '⚾';
+      position: absolute;
+      font-size: 10rem;
+      opacity: 0.04;
+      bottom: -2rem;
+      right: 0;
+      pointer-events: none;
+    }
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+    h1 em { color: var(--gold); font-style: normal; }
+    .subtitle { color: var(--muted); margin-top: 0.4rem; font-size: 0.9rem; }
+    .last-updated { color: #3a5a80; font-size: 0.78rem; margin-top: 0.5rem; }
+
+    /* ── Main ── */
+    main { max-width: 1280px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    .tab {
+      padding: 0.55rem 1.6rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.88rem;
+      transition: all 0.18s;
+      user-select: none;
+    }
+    .tab:hover { border-color: var(--accent); color: var(--text); }
+    .tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* ── Grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* ── Division Card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    .card-header {
+      padding: 0.9rem 1.4rem;
+      background: linear-gradient(90deg, #0d1e3a, var(--card));
+      font-weight: 800;
+      font-size: 0.88rem;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      padding: 0.55rem 0.9rem;
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: var(--card2);
+    }
+    thead th:first-child { text-align: left; padding-left: 1.2rem; }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(28,45,74,0.6);
+      transition: background 0.12s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(29, 111, 229, 0.07); }
+    tbody tr.leader td { border-left: 3px solid var(--gold); }
+    tbody tr.leader td:first-child { padding-left: calc(1.2rem - 3px); }
+
+    td {
+      padding: 0.72rem 0.9rem;
+      text-align: center;
+      font-size: 0.87rem;
+    }
+    td:first-child { text-align: left; padding-left: 1.2rem; }
+
+    .rank { color: var(--muted); font-size: 0.75rem; min-width: 1.2rem; display: inline-block; }
+    .team-name { font-weight: 600; }
+    .pct { font-weight: 800; color: var(--accent); }
+    .gb-leader { color: var(--gold); font-weight: 700; }
+    .streak-w { color: var(--green); font-weight: 700; }
+    .streak-l { color: var(--red); font-weight: 700; }
+
+    /* ── Loading / Error ── */
+    .state {
+      text-align: center;
+      padding: 5rem 2rem;
+      color: var(--muted);
+    }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin: 0 auto 1.2rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .state.error p { color: var(--red); margin-bottom: 1rem; }
+    .retry-btn {
+      padding: 0.55rem 1.4rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .retry-btn:hover { opacity: 0.85; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: #2a4060;
+      font-size: 0.78rem;
+      border-top: 1px solid var(--border);
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 520px) {
+      h1 { font-size: 1.6rem; }
+      .grid { grid-template-columns: 1fr; }
+      td, thead th { padding: 0.6rem 0.5rem; font-size: 0.8rem; }
+      td:first-child, thead th:first-child { padding-left: 0.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚾ MLB <em>순위표</em></h1>
+  <p class="subtitle">Major League Baseball 2025 정규시즌</p>
+  <p class="last-updated" id="lastUpdated">불러오는 중…</p>
+</header>
+
+<main>
+  <div class="tabs">
+    <button class="tab active" onclick="switchLeague('AL', this)">🇺🇸 아메리칸 리그 (AL)</button>
+    <button class="tab" onclick="switchLeague('NL', this)">🏟️ 내셔널 리그 (NL)</button>
+  </div>
+  <div id="container">
+    <div class="state"><div class="spinner"></div><p>데이터를 불러오는 중입니다…</p></div>
+  </div>
+</main>
+
+<footer>데이터 출처: MLB Stats API &nbsp;·&nbsp; 10분마다 자동 새로고침</footer>
+
+<script>
+  const DIV_NAMES = {
+    200: 'AL 서부', 201: 'AL 동부', 202: 'AL 중부',
+    203: 'NL 서부', 204: 'NL 동부', 205: 'NL 중부',
+  };
+  const DIV_LEAGUE = {
+    200: 'AL', 201: 'AL', 202: 'AL',
+    203: 'NL', 204: 'NL', 205: 'NL',
+  };
+  // Sort order within each league
+  const DIV_ORDER = { 201: 0, 202: 1, 200: 2, 204: 0, 205: 1, 203: 2 };
+
+  let store = { AL: [], NL: [] };
+  let active = 'AL';
+
+  async function load() {
+    setLoading();
+    try {
+      const r = await fetch(
+        'https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=2025&standingsTypes=regularSeason&hydrate=team,division'
+      );
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const { records } = await r.json();
+
+      store = { AL: [], NL: [] };
+      for (const rec of records) {
+        const divId = rec.division.id;
+        const league = DIV_LEAGUE[divId];
+        if (!league) continue;
+        store[league].push({
+          divId,
+          name: DIV_NAMES[divId] || rec.division.name,
+          order: DIV_ORDER[divId] ?? 99,
+          teams: rec.teamRecords.map(t => {
+            const last10 = t.records?.splitRecords?.find(s => s.type === 'lastTen');
+            return {
+              rank: parseInt(t.divisionRank, 10),
+              name: t.team.name,
+              w: t.wins,
+              l: t.losses,
+              pct: t.leagueRecord.pct,
+              gb: t.divisionGamesBack,
+              streak: t.streak?.streakCode ?? '-',
+              last10: last10 ? `${last10.wins}-${last10.losses}` : '-',
+            };
+          }),
+        });
+      }
+      for (const lg of ['AL', 'NL']) store[lg].sort((a, b) => a.order - b.order);
+
+      document.getElementById('lastUpdated').textContent =
+        '최종 업데이트: ' + new Date().toLocaleString('ko-KR');
+
+      render(active);
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  function setLoading() {
+    document.getElementById('container').innerHTML =
+      '<div class="state"><div class="spinner"></div><p>데이터를 불러오는 중입니다…</p></div>';
+  }
+
+  function setError(msg) {
+    document.getElementById('container').innerHTML = `
+      <div class="state error">
+        <p>데이터를 불러오지 못했습니다.<br><small>${msg}</small></p>
+        <button class="retry-btn" onclick="load()">🔄 다시 시도</button>
+      </div>`;
+  }
+
+  function render(league) {
+    const divs = store[league];
+    if (!divs || divs.length === 0) { setError('데이터 없음'); return; }
+
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+
+    for (const div of divs) {
+      const rows = div.teams.map((t, i) => {
+        const streakClass = t.streak.startsWith('W') ? 'streak-w' : t.streak.startsWith('L') ? 'streak-l' : '';
+        const gbCell = t.gb === '-' || t.gb === '—'
+          ? '<span class="gb-leader">—</span>'
+          : t.gb;
+        return `
+          <tr class="${i === 0 ? 'leader' : ''}">
+            <td><span class="rank">${t.rank}</span> <span class="team-name">${t.name}</span></td>
+            <td>${t.w}</td>
+            <td>${t.l}</td>
+            <td class="pct">${t.pct}</td>
+            <td>${gbCell}</td>
+            <td>${t.last10}</td>
+            <td class="${streakClass}">${t.streak}</td>
+          </tr>`;
+      }).join('');
+
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-header">${div.name}</div>
+        <table>
+          <thead>
+            <tr>
+              <th>팀</th><th>승</th><th>패</th><th>승률</th><th>GB</th><th>최근10</th><th>연속</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+      grid.appendChild(card);
+    }
+
+    const container = document.getElementById('container');
+    container.innerHTML = '';
+    container.appendChild(grid);
+  }
+
+  function switchLeague(league, btn) {
+    active = league;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    if (store[league].length) render(league);
+    else load();
+  }
+
+  load();
+  setInterval(load, 10 * 60 * 1000);
+</script>
+</body>
+</html>
